@@ -1,3 +1,10 @@
+import random
+
+pieceName = ["帅", "士", "象", "马", "车", "炮", "卒"]
+#pieceValue = [0, 170, 160, 450, 1000, 450, 60]
+pieceValue = [100000, 100, 200, 400, 1000, 500, 200]
+activeValue = [0, 1, 1, 12, 6, 6, 15]
+
 class ChessPiece:
 	def __init__(self, pieceType, position, board, down):
 		"""
@@ -12,19 +19,26 @@ class ChessPiece:
 			6   卒       60
 		"""
 		self.pieceType = pieceType
-		pieceName = ["帅", "士", "象", "马", "车", "炮", "卒"]
+
 		if down:
 			self.name = '('+pieceName[pieceType]+')'
 		else:
 			self.name = '['+pieceName[pieceType]+']'
-		pieceValue = [0, 1, 2, 4, 10, 5, 2]
 		self.value = pieceValue[pieceType]
+		self.activeValue = activeValue[pieceType]
 		self.alive = True
 		self.x = position[0]
 		self.y = position[1]
 		self.board = board
 		self.board[self.x][self.y] = self
 		self.down = down
+		if down == True:
+			self.myCenterX = 1
+			self.oppCenterX = 8
+		else:
+			self.myCenterX = 8
+			self.oppCenterX = 1
+		self.centerY = 4
 
 	def move(self, toX, toY):
 		die = None
@@ -49,6 +63,17 @@ class ChessPiece:
 					return True
 				else:
 					return False
+		elif self.pieceType == 2:
+			if self.down:
+				if 0 <= x <= 4 and 0 <= y <= 8:
+					return True
+				else:
+					return False
+			else:
+				if 5 <= x <= 9 and 0 <= y <= 8:
+					return True
+				else:
+					return False
 		else:
 			if 0 <= x <= 9 and 0 <= y <= 8:
 				return True
@@ -69,10 +94,25 @@ class ChessPiece:
 		return True
 
 	def getMoves(self):
-		back = []
 		if self.pieceType == 0:
 			moveList = ((-1, 0), (1, 0), (0, -1), (0, 1))
 			moveList = [(self.x+i[0], self.y+i[1]) for i in moveList]
+			if self.down:
+				for i in range(self.x, 10):
+					if self.board[i][self.y]:
+						if self.board[i][self.y].pieceType == 0:
+							moveList.append((i, self.y))
+							break
+						else:
+							break
+			else:
+				for i in range(self.x, -1, -1):
+					if self.board[i][self.y]:
+						if self.board[i][self.y].pieceType == 0:
+							moveList.append((i, self.y))
+							break
+						else:
+							break
 		elif self.pieceType == 1:
 			moveList = ((-1, -1), (-1, 1), (1, -1), (1, 1))
 			moveList = [(self.x+i[0], self.y+i[1]) for i in moveList]
@@ -151,6 +191,7 @@ class ChessPiece:
 					moveList = [(-1, 0), (0, -1), (0, 1)]
 			moveList = [(self.x+i[0], self.y+i[1]) for i in moveList]
 		#print(moveList)
+		back = []
 		for move in moveList:
 			#print(move)
 			#print(self.inRange(move[0], move[1]))
@@ -160,4 +201,62 @@ class ChessPiece:
 				((not self.board[move[0]][move[1]]) or self.board[move[0]][move[1]].down ^ self.down) and \
 				self.inWay(move[0], move[1]):
 				back.append(move)
-		return back
+		#sort
+		start = 0
+		end = len(back)-1
+		move = back
+		while start < end:
+			if not self.board[move[end][0]][move[end][1]]:
+				end -= 1
+			else:
+				if not self.board[move[start][0]][move[end][1]]:
+					tmp = move[start]
+					move[start] = move[end]
+					move[end] = tmp
+					start += 1
+					end -= 1
+				else:
+					start += 1
+		#return back
+		i = 0
+		for j in back:
+			if not self.board[j[0]][j[1]]:
+				break
+			i += 1
+		if i == 0:
+			return back
+		elif i == len(back):
+			return back
+		else:
+			kill = back[0:i]
+			unkill = back[i:]
+			random.shuffle(kill)
+			random.shuffle(unkill)
+			return kill + unkill
+
+	def getPositionValue(self):
+		myValue = 0
+		if self.pieceType == 1 or self.pieceType == 2:
+			myValue += abs(self.x-self.myCenterX) + abs(self.y-self.centerY)
+		elif self.pieceType == 3:
+			myValue += 60/(1+abs(self.x-self.oppCenterX)+abs(self.centerY-self.y))
+		elif self.pieceType == 4:
+			myValue += 30/(1+abs(self.x-self.oppCenterX)+abs(self.centerY-self.y))
+		elif self.pieceType == 6:
+			if abs(self.x-self.oppCenterX) <= 3:
+				myValue += 120/(1+abs(self.x-self.oppCenterX)+abs(self.centerY-self.y))
+		moves = self.getMoves()
+		for move in moves:
+			if self.board[move[0]][move[1]] and self.board[move[0]][move[1]].down ^ self.down:
+				myValue += pieceValue[self.board[move[0]][move[1]].pieceType]*0.2
+		myValue += len(moves)*activeValue[self.pieceType]
+		return myValue
+
+	def near(self, x, y):
+		if self.x == x:
+			return True
+		if self.y == y:
+			return True
+		if abs(self.x-x)+abs(self.y-y) <= 4:
+			return True
+		return False
