@@ -166,13 +166,13 @@ class BaseChessBoard(object) :
         self._move_piece(pos_from, pos_to)
         return Move(board, pos_from, pos_to)
         
-    def move_iccs(move_str):
+    def move_iccs(self, move_str):
         move_from, move_to = Move.from_iccs(move_str)
-        return move(move_from, move_to)
+        return self.move(move_from, move_to)
     
-    def move_chinese(move_str):
+    def move_chinese(self, move_str):
         move_from, move_to = Move.from_chinese(self, move_str)
-        return move(move_from, move_to)
+        return self.move(move_from, move_to)
     
     def next_turn(self) :
         if self.move_side == None :
@@ -331,8 +331,8 @@ class ChessBoard(BaseChessBoard):
         
     def is_checked(self):
         king = self.get_king(self.move_side)
-        king.create_moves()
-        if not king : return 0
+        #king.create_moves()
+        if not king : return 1
         killers = self.get_side_pieces(ChessSide.next_side(self.move_side))
         '''
         for piece in killers:

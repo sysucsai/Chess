@@ -17,7 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-import sys,time
+import sys
+import time
 from enum import *
 
 from subprocess import PIPE, Popen
@@ -109,8 +110,8 @@ class UcciEngine(Thread):
     def quit(self):
         
         self.send_cmd("quit")
-        self.running = False
         time.sleep(0.2)
+        self.running = False
         
     def go_from(self, fen, search_depth = 8):
         #pass all out msg first
@@ -263,7 +264,7 @@ if __name__ == '__main__':
             output = engine.move_queue.get()
             if output[0] == 'best_move':
                 p_from, p_to = output[1]["move"]
-                print(board.move(p_from, p_to).to_chinese(), end=' ')
+                print(board.move(p_from, p_to).to_chinese(), end=" ")
                 #board.print_board()
                 last_side = board.move_side
                 board.next_turn()

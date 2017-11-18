@@ -98,7 +98,7 @@ class Move(object):
         elif diff > 0:
                 diff_str = "进"       
         else:
-                diff_str = "退" 
+                diff_str = "退"
         
         #王车炮兵规则
         if man_species in [ PieceT.KING,  PieceT.ROOK,  PieceT.CANNON,  PieceT.PAWN]:
@@ -112,7 +112,7 @@ class Move(object):
                 dest_str = h_level_index[man_side_int][self.p_to.x]
         
         name_str = self.__get_chinese_name(self.p_from)
-                
+
         return name_str + diff_str + dest_str 
         
     def __get_chinese_name(self, p_from):

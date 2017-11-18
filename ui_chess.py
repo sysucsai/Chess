@@ -3,26 +3,30 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from cchess2 import *
+from threading import Lock, Thread
 
 import abpa_fgn
 
+lock = Lock()
+
 class myThread(Thread):
-    def __init__(self,fun):
+    def __init__(self,side, fun):
         super(myThread, self).__init__()
+        self.side = side
         self.fun = fun
         self.running = False
 
     def run(self):
         self.running = True
         while self.running:
-            self.fun()
+            self.fun(self.side)
 
     def quit(self):
         self.running = False
 
 class piece(QLabel):
     def __init__(self,side, id, x, y, parent):
-        super(QLabel, self).__init__(parent)
+        super(piece, self).__init__(parent)
         self.parent = parent
         self.side = side
         self.id = id
@@ -40,7 +44,8 @@ class Window(QWidget):
 
         #self.board = [[0 for i in range(9)] for j in range(10)]
         self.nboard = None
-        self.temp = None
+        self.threadRed = None
+        self.threadBlack = None
         self.playerRedIndex = 0
         self.playerBlackIndex = 0
         self.lastMove = []
@@ -48,6 +53,10 @@ class Window(QWidget):
 
         self.initial()
         self.show()#启动窗口
+
+        #timer = QTimer(self)
+        #timer.timeout.connect(self.aiMove)
+        #timer.start(100)
 
     def setWindow(self):
         self.setFixedSize(1000, 800)#设置窗口大小
@@ -182,20 +191,23 @@ class Window(QWidget):
             self.pieces.append(self.pieceRow)
 
     def initial(self):
-        if self.temp:
-            self.temp.quit()
-
-        if self.playerRedIndex == 1:
-            self.playerRed.quit()
-        if self.playerBlackIndex == 1:
-            self.playerBlack.quit()
-
+        if self.threadRed:
+            self.stopping = 1
+            self.threadRed.quit()
+            if self.playerRedIndex == 1:
+                self.playerRed.quit()
+        if self.threadBlack:
+            self.stopping = 1
+            self.threadBlack.quit()
+            if self.playerBlackIndex == 1:
+                self.playerBlack.quit()
 
         self.side = 0
         self.text.setText("")
         self.text.append("·红方执棋...")
         self.moving = 0
         self.aiMoving = 0
+        self.stopping = 0
         self.finish = 0
         self.lastMove = []
         self.choosedPiece = []
@@ -238,9 +250,12 @@ class Window(QWidget):
         else:
             self.playerBlack = 0
 
-        if self.playerRedIndex != 0 or self.playerBlackIndex !=0:
-            self.temp = myThread(self.aiMove)
-            self.temp.start()
+        if self.playerRedIndex != 0:
+            self.threadRed = myThread(0,self.aiMove)
+            self.threadRed.start()
+        if self.playerBlackIndex !=0:
+            self.threadBlack = myThread(1,self.aiMove)
+            self.threadBlack.start()
 
     def eleeyeEngine(self,engine):
         while True:
@@ -251,99 +266,92 @@ class Window(QWidget):
             output = engine.move_queue.get()
             if output[0] == 'best_move':
                 p_from, p_to = output[1]["move"]
-                #print(board.move(p_from, p_to).to_chinese(), end=' ')
-                #board.print_board()
-                #last_side = board.move_side
-                #board.next_turn()
-                #break
-                return p_from.x, p_from.y, p_to.x, p_to.y
+                return [p_from.x, p_from.y, p_to.x, p_to.y]
+            elif output[0] == 'info_move':
+                continue
             elif output[0] == 'dead':
-                #print(win_dict[last_side])
-                #dead = True
-                #break
                 return -1
             elif output[0] == 'draw':
-                #print('引擎议和')
-                #dead = True
-                #break
                 return 0
             elif output[0] == 'resign':
-                #print('引擎认输', win_dict[last_side])
-                #dead = True
-                #break
                 return 1
 
     def _move(self, xfrom, yfrom, xto, yto):
-        self.nboard.print_board()
         move = self.nboard.move(Pos(xfrom, yfrom), Pos(xto, yto))
-        print((xfrom, yfrom),(xto, yto))
-        if move == None:
+        if move is None:
             return None
         self.nboard.next_turn()
-        print(move.to_chinese())
-        self.text.append(move.to_chinese())
+        self.lastMove = [xfrom,yfrom,xto,yto]
 
+        lock.acquire()
+        self.text.append(move.to_chinese())
         self.pieces[9-yto][xto].id = self.pieces[9-yfrom][xfrom].id
         self.pieces[9-yto][xto].side = self.pieces[9-yfrom][xfrom].side
         self.pieces[9-yfrom][xfrom].id = None
         self.pieces[9-yfrom][xfrom].side = None
-        self.pieces[9-yfrom][xfrom].setStyleSheet("background-image:none;border:0")
+        self.pieces[9-yfrom][xfrom].setStyleSheet("background-image:url();border:0")
         if self.pieces[9-yto][xto].side == 0:
             self.pieces[9-yto][xto].setStyleSheet("background-image:url(\"img/"+self.pieces[9-yto][xto].id + str(self.pieces[9-yto][xto].side) +".png\");border:0")
         else:
             self.pieces[9-yto][xto].setStyleSheet("background-image:url(\"img/"+self.pieces[9-yto][xto].id + str(self.pieces[9-yto][xto].side) +".png\");border:0")
-
-        self.lastMove = [xfrom,yfrom,xto,yto]
-
         if self.nboard.is_checkmate():
             self.text.append("*将死，" + {0:"红方",1:"黑方"}[self.side] + "胜")
             self.finish = 1
-            return
+        else:
+            pass
+            #self.text.append('* 红方执棋...')
+            #self.text.append({1: '* 红方执棋...', 0: '* 黑方执棋...'}[self.side])
+        lock.release()
 
         self.side = {0: 1, 1: 0}[self.side]
-        self.text.append({0:"·红方执棋...",1:"·黑方执棋..."}[self.side])
-
         return 1
 
-    def aiMove(self):
-        while ((self.side == 0 and self.playerRed != 0) or (self.side == 1 and self.playerBlack != 0)) and self.finish != 1:
+    def aiMove(self,side):
+        #lock.acquire()
+        if self.finish == 1 or self.side != side or self.stopping == 1:
+            pass
+        else:
             self.aiMoving = 1
-            if self.side == 0 and self.playerRedIndex == 1:
-                self.playerRed.go_from(self.nboard.to_fen(), 8)
-                xfrom,yfrom,xto,yto = self.eleeyeEngine(self.playerRed)
-                self._move(xfrom,yfrom,xto,yto)
-                continue
-
-            if self.side == 1 and self.playerBlackIndex == 1:
-                self.playerBlack.go_from(self.nboard.to_fen(), 8)
-                xfrom, yfrom, xto, yto = self.eleeyeEngine(self.playerBlack)
-                self._move(xfrom,yfrom,xto,yto)
-                continue
-
-            if self.side == 0 and self.playerRed != 0:
-                if len(self.lastMove) != 0:
-                    self.playerRed.opponentMove(self.lastMove[1],self.lastMove[0],self.lastMove[3],self.lastMove[2])
-                yfrom, xfrom, yto, xto = self.playerRed.myStep()
-                if self.playerRed.iWin:
-                    self.finish == 1
-                    print("AI Red feel it Win")
-                    break
+            if side  == 0 and self.playerRedIndex > 0:
+                if self.playerRedIndex == 1:
+                    self.playerRed.go_from(self.nboard.to_fen(), 8)
+                    l = self.eleeyeEngine(self.playerRed)
+                    if l in [-1,0,1]:
+                        print("terminate")
+                        self.finish = 1
+                    else:
+                        (xfrom, yfrom, xto, yto) = l
+                        self._move(xfrom,yfrom,xto,yto)
                 else:
-                    self._move(xfrom, yfrom, xto, yto )
-                    continue
-
-            if self.side == 1 and self.playerBlack != 0:
-                if len(self.lastMove) != 0:
-                    self.playerBlack.opponentMove(self.lastMove[1],self.lastMove[0],self.lastMove[3],self.lastMove[2])
-                yfrom, xfrom, yto, xto = self.playerBlack.myStep()
-                if self.playerBlack.iWin:
-                    self.finish == 1
-                    print("AI Black feel it Win")
-                    break
+                    if len(self.lastMove) != 0:
+                        self.playerRed.opponentMove(self.lastMove[1],self.lastMove[0],self.lastMove[3],self.lastMove[2])
+                    yfrom, xfrom, yto, xto = self.playerRed.myStep()
+                    if self.playerRed.iWin:
+                        self.finish = 1
+                        print("AI Red feel it Win")
+                    else:
+                        self._move(xfrom, yfrom, xto, yto )
+            elif side == 1 and self.playerBlackIndex > 0:
+                if self.playerBlackIndex == 1:
+                    self.playerBlack.go_from(self.nboard.to_fen(), 8)
+                    l = self.eleeyeEngine(self.playerBlack)
+                    if l in [-1,0,1]:
+                        print("terminate")
+                        self.finish = 1
+                    else:
+                        (xfrom, yfrom, xto, yto) = l
+                        self._move(xfrom,yfrom,xto,yto)
                 else:
-                    self._move(xfrom, yfrom, xto, yto )
-                    continue
+                    if len(self.lastMove) != 0:
+                        self.playerBlack.opponentMove(self.lastMove[1],self.lastMove[0],self.lastMove[3],self.lastMove[2])
+                    yfrom, xfrom, yto, xto = self.playerBlack.myStep()
+                    if self.playerBlack.iWin:
+                        self.finish = 1
+                        print("AI Black feel it Win")
+                    else:
+                        self._move(xfrom, yfrom, xto, yto )
         self.aiMoving = 0
+        #lock.release()
 
     def pieceCheck(self,side,id,x,y):
         if self.finish == 1 or self.aiMoving == 1:
