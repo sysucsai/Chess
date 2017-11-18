@@ -293,7 +293,6 @@ def read_from_xqf(full_file_name, read_annotation = True):
         ucCommenerNameLen,szCommenerName,ucAuthorNameLen,szAuthorName,\
         ucUn7 = struct.unpack("<2sB13s32s3sB12sB15sB63s64sB63sB15sB15sB15sB15sB63sB15sB15s32sB15sB15s528s",  contents[:0x400])
 
-        print(magic)
         if magic != b'XQ':
                 print("ha?")
                 return None
@@ -351,6 +350,7 @@ def read_from_xqf(full_file_name, read_annotation = True):
                 step_base_buff = XQFBuffDecoder(__decode_buff(keys, contents[0x400:])) 
         
         board = BaseChessBoard()
+        #board = Board()
         
         chessman_kinds = \
                 (

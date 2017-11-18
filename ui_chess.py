@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -7,10 +9,10 @@ from threading import Lock, Thread
 
 import abpa_fgn
 
-lock = Lock()
+lock2 = Lock()
 
 class myThread(Thread):
-    def __init__(self,side, fun):
+    def __init__(self,side,fun):
         super(myThread, self).__init__()
         self.side = side
         self.fun = fun
@@ -54,9 +56,9 @@ class Window(QWidget):
         self.initial()
         self.show()#启动窗口
 
-        #timer = QTimer(self)
-        #timer.timeout.connect(self.aiMove)
-        #timer.start(100)
+        timer = QTimer(self)
+        timer.timeout.connect(self.showStat)
+        timer.start(100)
 
     def setWindow(self):
         self.setFixedSize(1000, 800)#设置窗口大小
@@ -76,7 +78,6 @@ class Window(QWidget):
         self.redPlayer4Button = QRadioButton('空', self)  # 单选窗口
         self.redPlayer5Button = QRadioButton('空', self)  # 单选窗口
         self.redPlayer6Button = QRadioButton('空', self)  # 单选窗口
-
         self.group1 = QButtonGroup(self)
         self.group1.setExclusive(True)
         self.group1.addButton(self.redPlayer0Button)
@@ -103,7 +104,6 @@ class Window(QWidget):
         self.blackPlayer4Button = QRadioButton('空', self)  # 单选窗口
         self.blackPlayer5Button = QRadioButton('空', self)  # 单选窗口
         self.blackPlayer6Button = QRadioButton('空', self)  # 单选窗口
-
         self.group2 = QButtonGroup(self)
         self.group2.setExclusive(True)
         self.group2.addButton(self.blackPlayer0Button)
@@ -122,18 +122,16 @@ class Window(QWidget):
         self.group2.setId(self.blackPlayer6Button,6)
         self.blackPlayer0Button.setChecked(True)
 
-
         self.enableChooseGame = QRadioButton('棋局：',self)#单选窗口
+        self.enableChooseGame.clicked.connect(self.enableChoose)
         self.showChooseFile = QLineEdit(self)
         self.showChooseFile.setEnabled(False)
         self.chooseFileButton = QPushButton('选择文件',self)
         self.chooseFileButton.setEnabled(False)
+        self.chooseFileButton.clicked.connect(self.chooseFile)
         self.buttonRestart = QPushButton('重新开始', self)#创建重新开始按钮
-        self.buttonRestart.clicked.connect(self.initial)#开始游戏
-        #self.buttonRestart.setStyleSheet("border: none;font-family:微软雅黑;font-size:15px")
+        self.buttonRestart.clicked.connect(self.initial)
         self.textLabel = QLabel('历史走步:',self)
-        #self.player2.setAlignment(Qt.AlignCenter)
-        #self.player2.setStyleSheet("font-family:微软雅黑;font-size:25px")
         self.text = QTextEdit('',self)
         self.text.setReadOnly(True)
 
@@ -191,30 +189,54 @@ class Window(QWidget):
             self.pieces.append(self.pieceRow)
 
     def initial(self):
+        self.stopping = 1
         if self.threadRed:
-            self.stopping = 1
-            self.threadRed.quit()
             if self.playerRedIndex == 1:
                 self.playerRed.quit()
+                self.playerRed.join()
+            self.threadRed.quit()
+            self.threadRed.join()
+
         if self.threadBlack:
-            self.stopping = 1
-            self.threadBlack.quit()
             if self.playerBlackIndex == 1:
                 self.playerBlack.quit()
+                self.playerBlack.join()
+            self.threadBlack.quit()
+            self.threadBlack.join()
 
         self.side = 0
-        self.text.setText("")
-        self.text.append("·红方执棋...")
         self.moving = 0
-        self.aiMoving = 0
         self.stopping = 0
         self.finish = 0
+        self.stepQueue = Queue()
         self.lastMove = []
         self.choosedPiece = []
-        self.nboard = ChessBoard(FULL_INIT_FEN)
-        self.board = self.nboard.get_board()[::-1]
         self.playerRedIndex = self.group1.checkedId()
         self.playerBlackIndex = self.group2.checkedId()
+        self.text.setText("")
+
+
+        if self.enableChooseGame.isChecked():
+            text_str = self.showChooseFile.text().strip()
+            if text_str == '':
+                QMessageBox.warning(self, "Warning", "请输入文件名")
+                return
+            else:
+                try:
+                    game = read_from_xqf(text_str)
+                    for key in game.info:
+                        if type(game.info[key]) == type('sample'):
+                            self.text.append(key+" "+game.info[key])
+                        else:
+                            temp = key + " " + str(game.info[key])
+                            self.text.append(temp)
+                    self.nboard = ChessBoard(game.init_board.to_fen())
+                except:
+                    QMessageBox.warning(self, "Warning", "没有此的文件")
+                    return
+        else:
+            self.nboard = ChessBoard(FULL_INIT_FEN)
+        self.board = self.nboard.get_board()[::-1]
 
         ch_set = ['k', 'a', 'b', 'n', 'r', 'c', 'p']
         for i in range(10):
@@ -230,32 +252,38 @@ class Window(QWidget):
                     self.pieces[i][j].side = None
                     self.pieces[i][j].setStyleSheet("background-image:none;border:0")
 
+        self.text.append("·红方执棋...")
+
         if self.playerRedIndex == 0:
-            self.playerRed = 0
+            self.playerRed = None
         elif self.playerRedIndex == 1:
             self.playerRed = UcciEngine()
             self.playerRed.load("cchess2/test/eleeye/eleeye.exe")
         elif self.playerRedIndex == 2:
             self.playerRed = abpa_fgn.Abpa(True)
         else:
-            self.playerRed = 0
+            self.playerRed = None
 
         if self.playerBlackIndex == 0:
-            self.playerBlack = 0
+            self.playerBlack = None
         elif self.playerBlackIndex == 1:
             self.playerBlack = UcciEngine()
             self.playerBlack.load("cchess2/test/eleeye/eleeye.exe")
         elif self.playerBlackIndex == 2:
             self.playerBlack = abpa_fgn.Abpa(False)
         else:
-            self.playerBlack = 0
+            self.playerBlack = None
 
         if self.playerRedIndex != 0:
             self.threadRed = myThread(0,self.aiMove)
             self.threadRed.start()
+        else:
+            self.threadRed = None
         if self.playerBlackIndex !=0:
             self.threadBlack = myThread(1,self.aiMove)
             self.threadBlack.start()
+        else:
+            self.threadBlack = None
 
     def eleeyeEngine(self,engine):
         while True:
@@ -283,8 +311,14 @@ class Window(QWidget):
         self.nboard.next_turn()
         self.lastMove = [xfrom,yfrom,xto,yto]
 
-        lock.acquire()
-        self.text.append(move.to_chinese())
+        lock2.acquire()
+        self.stepQueue.put(move.to_chinese())
+        if self.nboard.is_checkmate():
+            self.finish = 1
+            self.stepQueue.put("*将死，" + {0:"红方",1:"黑方"}[self.side] + "胜")
+        else:
+            self.stepQueue.put({1: '· 红方执棋...', 0: '· 黑方执棋...'}[self.side])
+        lock2.release()
         self.pieces[9-yto][xto].id = self.pieces[9-yfrom][xfrom].id
         self.pieces[9-yto][xto].side = self.pieces[9-yfrom][xfrom].side
         self.pieces[9-yfrom][xfrom].id = None
@@ -294,24 +328,18 @@ class Window(QWidget):
             self.pieces[9-yto][xto].setStyleSheet("background-image:url(\"img/"+self.pieces[9-yto][xto].id + str(self.pieces[9-yto][xto].side) +".png\");border:0")
         else:
             self.pieces[9-yto][xto].setStyleSheet("background-image:url(\"img/"+self.pieces[9-yto][xto].id + str(self.pieces[9-yto][xto].side) +".png\");border:0")
-        if self.nboard.is_checkmate():
-            self.text.append("*将死，" + {0:"红方",1:"黑方"}[self.side] + "胜")
-            self.finish = 1
-        else:
-            pass
-            #self.text.append('* 红方执棋...')
-            #self.text.append({1: '* 红方执棋...', 0: '* 黑方执棋...'}[self.side])
-        lock.release()
 
         self.side = {0: 1, 1: 0}[self.side]
         return 1
 
+    def showStat(self):
+        lock2.acquire()
+        if not self.stepQueue.empty():
+            self.text.append(self.stepQueue.get())
+        lock2.release()
+
     def aiMove(self,side):
-        #lock.acquire()
-        if self.finish == 1 or self.side != side or self.stopping == 1:
-            pass
-        else:
-            self.aiMoving = 1
+        if not (self.finish == 1 or self.side != side or self.stopping == 1):
             if side  == 0 and self.playerRedIndex > 0:
                 if self.playerRedIndex == 1:
                     self.playerRed.go_from(self.nboard.to_fen(), 8)
@@ -350,11 +378,9 @@ class Window(QWidget):
                         print("AI Black feel it Win")
                     else:
                         self._move(xfrom, yfrom, xto, yto )
-        self.aiMoving = 0
-        #lock.release()
 
     def pieceCheck(self,side,id,x,y):
-        if self.finish == 1 or self.aiMoving == 1:
+        if self.finish == 1 or (self.side == 0 and self.playerRedIndex > 0) or (self.side == 1 and self.playerBlackIndex > 0):
             return
         if self.moving == 0:
             if side == self.side:
@@ -371,6 +397,15 @@ class Window(QWidget):
                     self.moving = 0
                 else:
                     print("invalid move")
+
+    def enableChoose(self):
+        self.showChooseFile.setEnabled(self.enableChooseGame.isChecked())
+        self.chooseFileButton.setEnabled(self.enableChooseGame.isChecked())
+        pass
+
+    def chooseFile(self):
+        text_str,_ = QFileDialog().getOpenFileName(self)
+        self.showChooseFile.setText(text_str)
 
     def _pos_to_screen(self, x, y):
         x_s = 55 + x * 70

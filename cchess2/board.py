@@ -269,14 +269,12 @@ class BaseChessBoard(object) :
                 count = 0
                 
             if y > 0: fen += '/'
-                        
         if self.move_side is ChessSide.BLACK:
             fen += ' b'
         elif self.move_side is ChessSide.RED :
             fen += ' w'
         else :
             raise CChessException('Move Side Error' + str(self.move_side))
-        
         return fen
 
     def dump_board(self):
