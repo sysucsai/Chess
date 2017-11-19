@@ -407,7 +407,7 @@ class Board:
 
 class Position:
     def __init__(self):
-        self.chessBoard = Board
+        #Board = Board
         self.sdPlayer = 0   #轮到谁走，0=红，1=黑
         self.ucpcSquares = []      #棋盘上的棋子
         for i in range(256):
@@ -421,22 +421,22 @@ class Position:
     def AddPiece(sq, pc):
         self.ucpcSquares[sq] = pc
         if pc < 16:
-            self.vlWhite += self.chessBoard.cucvlPiecePos[pc - 8][sq]
+            self.vlWhite += Board.cucvlPiecePos[pc - 8][sq]
         else :
-            self.vlBlack += self.chessBoard.cucvlPiecePos[pc - 16][self.chessBoard.square_flip(sq)]
+            self.vlBlack += Board.cucvlPiecePos[pc - 16][Board.square_flip(sq)]
     
     #删除棋子
     def DelPiece(sq, pc):
         self.ucpcSquares[sq] = 0
         if pc < 16:
-            self.vlWhite -= self.chessBoard.cucvlPiecePos[pc - 8][sq]
+            self.vlWhite -= Board.cucvlPiecePos[pc - 8][sq]
         else :
-            self.vlBlack -= self.chessBoard.cucvlPiecePos[pc - 16][self.chessBoard.square_flip(sq)]
+            self.vlBlack -= Board.cucvlPiecePos[pc - 16][Board.square_flip(sq)]
 
     #初始化棋盘
     def StartUp():
         for i in range(256):
-            pc = self.chessBoard.cucpcStartup[sq]
+            pc = Board.cucpcStartup[sq]
             if pc != 0:
                 self.AddPiece(sq, pc)
 
@@ -492,129 +492,129 @@ class Position:
             pcSrc = self.ucpcSquares[sqSrc]
             if (pcSrc & pcSelfSide) == 0:
                 continue
-            if pcSrc - pcSelfSide == self.chessBoard.piece_king:
+            if pcSrc - pcSelfSide == Board.piece_king:
                 for i in range(4):
-                    sqDst = sqSrc + self.chessBoard.ccKingDelta[i]
-                    if self.chessBoard.in_fort(sqDst) != True:
+                    sqDst = sqSrc + Board.ccKingDelta[i]
+                    if Board.in_fort(sqDst) != True:
                         continue
                     pcDst = self.ucpcSquares[sqDst]
                     if (pcDst & pcSelfSide) == 0:
-                        mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                        mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                         nGenMoves += 1
-            if pcSrc - pcSelfSide == self.chessBoard.piece_advisor:
+            if pcSrc - pcSelfSide == Board.piece_advisor:
                 for i in range(4):
-                    sqDst = sqSrc + self.chessBoard.ccAdvisorDelta[i]
-                    if self.chessBoard.in_fort(sqDst) != True:
+                    sqDst = sqSrc + Board.ccAdvisorDelta[i]
+                    if Board.in_fort(sqDst) != True:
                         continue
                     pcDst = self.ucpcSquares[sqDst]
                     if (pcDst & pcSelfSide) == 0:
-                        mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                        mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                         nGenMoves += 1
-            if pcSrc - pcSelfSide == self.chessBoard.piece_bishop:
+            if pcSrc - pcSelfSide == Board.piece_bishop:
                 for i in range(4):
-                    sqDst = sqSrc + self.chessBoard.ccAdvisorDelta[i]
-                    if self.chessBoard.in_board(sqDst) != True and self.chessBoard.home_half(sqDst, sdPlayer) and self.ucpcSquares[sqDst] == 0:
+                    sqDst = sqSrc + Board.ccAdvisorDelta[i]
+                    if Board.in_board(sqDst) != True and Board.home_half(sqDst, sdPlayer) and self.ucpcSquares[sqDst] == 0:
                         continue
-                    sqDst += self.chessBoard.ccAdvisorDelta[i]
+                    sqDst += Board.ccAdvisorDelta[i]
                     pcDst = self.ucpcSquares[sqDst]
                     if (pcDst & pcSelfSide) == 0:
-                        mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                        mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                         nGenMoves += 1
-            if pcSrc - pcSelfSide == self.chessBoard.piece_knight:
+            if pcSrc - pcSelfSide == Board.piece_knight:
                 for i in range(4):
-                    sqDst = sqSrc + self.chessBoard.ccKingDelta[i]
+                    sqDst = sqSrc + Board.ccKingDelta[i]
                     if self.ucpcSquares[sqDst] != 0:
                         continue
                     for j in range(2):
-                        sqDst = sqSrc + self.chessBoard.ccKnightDelta[i][j]
-                        if self.chessBoard.in_board(sqDst) != True:
+                        sqDst = sqSrc + Board.ccKnightDelta[i][j]
+                        if Board.in_board(sqDst) != True:
                             continue
                         pcDst = self.ucpcSquares[sqDst]
                         if (pcDst & pcSelfSide) == 0:
-                            mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                            mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                             nGenMoves += 1
-            if pcSrc - pcSelfSide == self.chessBoard.piece_rook:
+            if pcSrc - pcSelfSide == Board.piece_rook:
                 for i in range(4):
-                    nDelta = self.chessBoard.ccKingDelta[i]
+                    nDelta = Board.ccKingDelta[i]
                     sqDst = sqSrc + nDelta
-                    while self.chessBoard.in_board(sqDst):
+                    while Board.in_board(sqDst):
                         pcDst = self.ucpcSquares[sqDst]
                         if pcDst == 0:
-                            mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                            mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                             nGenMoves += 1
                         else :
                             if (pcDst & pcOppSide) != 0:
-                                mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                                mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                                 nGenMoves += 1
                             break
                         sqDst += nDelta
-            if pcSrc - pcSelfSide == self.chessBoard.piece_cannon:
+            if pcSrc - pcSelfSide == Board.piece_cannon:
                 for i in range(4):
-                    nDelta = self.chessBoard.ccKingDelta[i]
+                    nDelta = Board.ccKingDelta[i]
                     sqDst = sqSrc + nDelta
-                    while self.chessBoard.in_board(sqDst):
+                    while Board.in_board(sqDst):
                         pcDst = self.ucpcSquares[sqDst]
                         if pcDst == 0:
-                            mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                            mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                             nGenMoves += 1
                         else :
                             break
                         sqDst += nDelta
                     sqDst += nDelta
-                    while self.chessBoard.in_board(sqDst):
+                    while Board.in_board(sqDst):
                         pcDst = self.ucpcSquares[sqDst]
                         if pcDst != 0:
                             if (pcDst & pcOppSide) != 0:
-                                mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                                mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                                 nGenMoves += 1
                             break
                         sqDst += nDelta
-            if pcSrc - pcSelfSide == self.chessBoard.piece_pawn:
-                sqDst = self.chessBoard.square_forward(sqSrc, self.sdPlayer)
-                if self.chessBoard.in_board(sqDst):
+            if pcSrc - pcSelfSide == Board.piece_pawn:
+                sqDst = Board.square_forward(sqSrc, self.sdPlayer)
+                if Board.in_board(sqDst):
                     pcDst = self.ucpcSquares[sqDst]
                     if (pcDst & pcSelfSide) == 0:
-                        mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                        mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                         nGenMoves += 1
-                if self.chessBoard.away_half(sqSrc, self.sdPlayer):
+                if Board.away_half(sqSrc, self.sdPlayer):
                     for nDelta in range(-1, 2, 2):
                         sqDst = sqSrc + nDelta
-                        if self.chessBoard.in_board(sqDst):
+                        if Board.in_board(sqDst):
                             pcDst = self.ucpcSquares[sqDst]
                             if (pcDst & pcSelfSide) == 0:
-                                mvs[nGenMoves] = self.chessBoard.move(sqSrc, sqDst)
+                                mvs[nGenMoves] = Board.move(sqSrc, sqDst)
                                 nGenMoves += 1
         return nGenMoves
 
     #判断走步是否合法
     def LegalMove(mv):
-        sqSrc = self.chessBoard.src(mv)
+        sqSrc = Board.src(mv)
         pcSrc = self.ucpcSquares[sqSrc]
         pcSelfSide = self.side_tag(self.sdPlayer)
         if (pcSrc & pcSelfSide) == 0:
             return False
 
-        sqDst = self.chessBoard.dst(mv)
+        sqDst = Board.dst(mv)
         pcDst = self.ucpcSquares[sqDst]
         if (pcDst & pcSelfSide) != 0:
             return False
 
-        if pcSrc - pcSelfSide == self.chessBoard.piece_king:
-            return (self.chessBoard.in_fort(sqDst) and self.chessBoard.king_span(sqSrc, sqDst))
-        if pcSrc - pcSelfSide == self.chessBoard.piece_advisor:
-            return (self.chessBoard.in_fort(sqDst) and self.chessBoard.advisor_span(sqSrc, sqDst))
-        if pcSrc - pcSelfSide == self.chessBoard.piece_bishop:
-            return (self.chessBoard.same_half(sqSrc, sqDst) and self.chessBoard.bishop_span(sqSrc, sqDst) and self.ucpcSquares[self.chessBoard.bishop_pin(sqSrc, sqDst)] == 0)
-        if pcSrc - pcSelfSide == self.chessBoard.piece_knight:
-            sqPin = self.chessBoard.knight_pin(sqSrc, sqDst)
+        if pcSrc - pcSelfSide == Board.piece_king:
+            return (Board.in_fort(sqDst) and Board.king_span(sqSrc, sqDst))
+        if pcSrc - pcSelfSide == Board.piece_advisor:
+            return (Board.in_fort(sqDst) and Board.advisor_span(sqSrc, sqDst))
+        if pcSrc - pcSelfSide == Board.piece_bishop:
+            return (Board.same_half(sqSrc, sqDst) and Board.bishop_span(sqSrc, sqDst) and self.ucpcSquares[Board.bishop_pin(sqSrc, sqDst)] == 0)
+        if pcSrc - pcSelfSide == Board.piece_knight:
+            sqPin = Board.knight_pin(sqSrc, sqDst)
             return sqPin != (sqSrc and self.ucpcSquares[sqPin] == 0)
-        if pcSrc - pcSelfSide == self.chessBoard.piece_rook or pcSrc - pcSelfSide == self.chessBoard.piece_cannon:
-            if self.chessBoard.same_rank(sqSrc, sqDst):
+        if pcSrc - pcSelfSide == Board.piece_rook or pcSrc - pcSelfSide == Board.piece_cannon:
+            if Board.same_rank(sqSrc, sqDst):
                 if sqDst < sqSrc:
                     nDelta = -1
                 else :
                     nDelta = 1
-            elif self.chessBoard.same_file(sqSrc, sqDst):
+            elif Board.same_file(sqSrc, sqDst):
                 if sqDst < sqSrc:
                     nDelta = -16
                 else :
@@ -625,18 +625,18 @@ class Position:
             while (sqPin != sqDst) and (self.ucpcSquares[sqPin] == 0) :
                 sqPin += nDelta
             if sqPin == sqDst:
-                return (pcDst == 0) or (pcSrc - pcSelfSide == self.chessBoard.piece_rook)
-            elif (pcDst != 0) and (pcSrc - pcSelfSide == self.chessBoard.piece_cannon):
+                return (pcDst == 0) or (pcSrc - pcSelfSide == Board.piece_rook)
+            elif (pcDst != 0) and (pcSrc - pcSelfSide == Board.piece_cannon):
                 sqPin += nDelta
                 while (sqPin != sqDst) and (self.ucpcSquares[sqPin] == 0):
                     sqPin += nDelta
                 return (sqPin == sqDst)
             else :
                 return False
-        if pcSrc - pcSelfSide == self.chessBoard.piece_pawn:
-            if self.chessBoard.away_half(sqDst, self.sdPlayer) and ((sqDst == sqSrc - 1) or (sqDst == sqSrc + 1)):
+        if pcSrc - pcSelfSide == Board.piece_pawn:
+            if Board.away_half(sqDst, self.sdPlayer) and ((sqDst == sqSrc - 1) or (sqDst == sqSrc + 1)):
                 return True
-            return sqDst == self.chessBoard.square_forward(sqSrc, self.sdPlayer)
+            return sqDst == Board.square_forward(sqSrc, self.sdPlayer)
         else :
             return False
 
@@ -648,40 +648,40 @@ class Position:
 
         for sqSrc in range(256):
             #找到将
-            if self.ucpcSquares[sqSrc] != pcSelfSide + self.chessBoard.piece_king:
+            if self.ucpcSquares[sqSrc] != pcSelfSide + Board.piece_king:
                 continue
             #将是否被兵将军
-            if self.ucpcSquares[self.chessBoard.square_forward(sqSrc, self.sdPlayer)] == (pcOppSide + self.chessBoard.piece_pawn):
+            if self.ucpcSquares[Board.square_forward(sqSrc, self.sdPlayer)] == (pcOppSide + Board.piece_pawn):
                 return True
             for nDelta in (-1, 2, 2):
-                if self.ucpcSquares[sqSrc + nDelta] == pcOppSide + self.chessBoard.piece_pawn:
+                if self.ucpcSquares[sqSrc + nDelta] == pcOppSide + Board.piece_pawn:
                     return True
 
             #是否被马将军
             for i in range (4):
-                if self.ucpcSquares[sqSrc + self.chessBoard.ccAdvisorDelta[i]] != 0:
+                if self.ucpcSquares[sqSrc + Board.ccAdvisorDelta[i]] != 0:
                     continue
                 for j in range(2):
-                    pcDst = self.ucpcSquares[sqSrc + self.chessBoard.ccKnightCheckDelta[i][j]]
-                    if pcDst == pcOppSide + self.chessBoard.piece_knight:
+                    pcDst = self.ucpcSquares[sqSrc + Board.ccKnightCheckDelta[i][j]]
+                    if pcDst == pcOppSide + Board.piece_knight:
                         return True
 
             #判断是否被车or炮将军or被对方将骑脸
             for i in range(4):
-                nDelta = self.chessBoard.ccKingDelta[i]
+                nDelta = Board.ccKingDelta[i]
                 sqDst = sqSrc + nDelta
-                while self.chessBoard.in_board(sqDst):
+                while Board.in_board(sqDst):
                     pcDst = self.ucpcSquares[sqDst]
                     if pcDst != 0:
-                        if pcDst == pcOppSide + self.chessBoard.piece_rook or pcDst == pcOppSide + self.chessBoard.piece_king:
+                        if pcDst == pcOppSide + Board.piece_rook or pcDst == pcOppSide + Board.piece_king:
                             return True
                         break
                     sqDst += nDelta
                 sqDst += nDelta
-                while self.chessBoard.in_board(sqDst):
+                while Board.in_board(sqDst):
                     pcDst = self.ucpcSquares[sqDst]
                     if pcDst != 0:
-                        if pcDst == pcOppSide + self.chessBoard.piece_cannon:
+                        if pcDst == pcOppSide + Board.piece_cannon:
                             return True
                         break
                     sqDst += nDelta
@@ -691,7 +691,7 @@ class Position:
     #判断是否被杀
     def IsMate():
         mvs = []
-        for ct in self.chessBoard.max_gen_moves:
+        for ct in Board.max_gen_moves:
             mvs.append(0)
         nGenMoves = self.GenerateMoves(mvs)
         for i in nGenMoves:
