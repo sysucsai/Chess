@@ -50,7 +50,7 @@ class Game(object):
                 move.right_move = chess_move 
     
     def verify_moves(self):
-        return True 
+        #return True
         move_list = self.dump_moves() 
         for move_line in move_list:        
              j = 0
@@ -88,7 +88,6 @@ class Game(object):
         self.init_board.print_board()
             
     def print_chinese_moves(self, steps_per_line=3):
-    
         moves = self.dump_chinese_moves()
         line_no = 1
         for line in moves:
