@@ -2,7 +2,7 @@ import random
 
 pieceName = ["帅", "士", "象", "马", "车", "炮", "卒"]
 #pieceValue = [0, 170, 160, 450, 1000, 450, 60]
-pieceValue = [100000, 100, 200, 400, 1000, 500, 200]
+pieceValue = [10000, 100, 200, 400, 1000, 500, 200]
 activeValue = [0, 1, 1, 12, 6, 6, 15]
 
 class ChessPiece:
@@ -52,7 +52,20 @@ class ChessPiece:
 		return die
 
 	def inRange(self, x, y):
-		if self.pieceType <= 1:
+		if self.pieceType == 0:
+			if 0 <= x <= 9 and self.board[x][y] and self.board[x][y].pieceType == 0:
+				return True
+			if self.down:
+				if 0 <= x <= 2 and 3 <= y <= 5:
+					return True
+				else:
+					return False
+			else:
+				if 7 <= x <= 9 and 3 <= y <= 5:
+					return True
+				else:
+					return False
+		elif self.pieceType == 1:
 			if self.down:
 				if 0 <= x <= 2 and 3 <= y <= 5:
 					return True
@@ -98,7 +111,7 @@ class ChessPiece:
 			moveList = ((-1, 0), (1, 0), (0, -1), (0, 1))
 			moveList = [(self.x+i[0], self.y+i[1]) for i in moveList]
 			if self.down:
-				for i in range(self.x, 10):
+				for i in range(self.x+1, 10):
 					if self.board[i][self.y]:
 						if self.board[i][self.y].pieceType == 0:
 							moveList.append((i, self.y))
@@ -106,7 +119,7 @@ class ChessPiece:
 						else:
 							break
 			else:
-				for i in range(self.x, -1, -1):
+				for i in range(self.x-1, -1, -1):
 					if self.board[i][self.y]:
 						if self.board[i][self.y].pieceType == 0:
 							moveList.append((i, self.y))

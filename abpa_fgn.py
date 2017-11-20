@@ -3,10 +3,11 @@ import random
 import time
 
 INF = 1000000
-DEPTH = 6#是4的时候可以开启位置股价，6就不行
+DEPTH = 6
 pieceTimePeriod = 0.5
-moveTimePeriod = 0.5
+moveTimePeriod = 0.1
 f = open("out.txt", "w")
+
 
 class Abpa:
 	def __init__(self, down = True):
@@ -46,16 +47,22 @@ class Abpa:
 		alpha = -INF
 		beta = INF
 		pieceStart = time.time()
-		myPiecesSort = self.getSortPieces(self.lastOppStep[0], self.lastOppStep[1])
+		myPiecesSort = self.getSortPieces(self.myPieces, self.lastOppStep[0], self.lastOppStep[1])
 		for piece in myPiecesSort:
-			#print(piece.name, "depth =", 1, "alpha =" , alpha, "beta =", beta, "start: {", file = f)
+			#print(piece.name, "depth =", 0, "alpha =" , alpha, "beta =", beta, "start: {", file = f)
+			'''if time.time() - pieceStart >= pieceTimePeriod and not piece.near(self.lastOppStep[0], self.lastOppStep[1]):
+				break'''
 			pieceAlpha = -INF
 			if not piece.alive:
 				continue
 			moveList = piece.getMoves()
 			logX, logY = piece.x, piece.y
 			moveStart = time.time()
+			if piece.pieceType == 5:
+				tmp = 0
 			for move in moveList:
+				'''if time.time()-moveStart >= moveTimePeriod and not self.board[move[0]][move[1]]:
+					break'''
 				die = piece.move(move[0], move[1])
 				value = self.ab(1, -beta, -alpha, move)
 				#revert
@@ -73,9 +80,7 @@ class Abpa:
 						best = piece, move
 					elif value == alpha and not self.board[best[1][0]][best[1][1]]:
 						best = piece, move
-				if time.time()-moveStart > moveTimePeriod:
-					break
-			#print(piece.name, "depth =", 1, "alpha =", alpha, "beta =", beta, "pieceAlpha = ", pieceAlpha, "}", file = f)
+			#print(piece.name, "depth =", 0, "alpha =", alpha, "beta =", beta, "pieceAlpha = ", pieceAlpha, "}", file = f)
 		#ori
 		fromX, fromY, toX, toY = best[0].x, best[0].y, best[1][0], best[1][1]
 		self.board[fromX][fromY].move(toX, toY)
@@ -83,7 +88,7 @@ class Abpa:
 			fromX, fromY, toX, toY = self.rotate(fromX, fromY, toX, toY)
 		if not self.oppPieces[0].alive:
 			self.iWin = True
-		#print(alpha)
+		#print("depth =", 0, "alpha =", alpha, file = f)
 		return fromX, fromY, toX, toY
 
 	def opponentMove(self, fromX, fromY, toX, toY):
@@ -92,13 +97,13 @@ class Abpa:
 		self.board[fromX][fromY].move(toX, toY)
 		self.lastOppStep = (toX, toY)
 
-	def getSortPieces(self, x, y):
-		myPiecesSort = self.myPieces[:]
+	def getSortPieces(self, pieceList, x, y):
+		myPiecesSort = pieceList[:]
 		random.shuffle(myPiecesSort)
 		start = 0
 		end = len(myPiecesSort)-1
 		while start < end:
-			if myPiecesSort[start].near(x, x):
+			if myPiecesSort[start].near(x, y):
 				start += 1
 			elif myPiecesSort[end].near(x, y):
 				tmp = myPiecesSort[start]
@@ -166,7 +171,7 @@ class Abpa:
 			self.check()
 		return value
 
-	def ab(self, depth, alpha, beta, move):
+	def ab(self, depth, alpha, beta, lastMove):
 		if depth&1 == 0:
 			pieceList = self.myPieces
 		else:
@@ -178,19 +183,25 @@ class Abpa:
 				return self.getValue(self.myPieces, self.oppPieces)
 			else:
 				return self.getValue(self.oppPieces, self.myPieces)
-		myPiecesSort = self.getSortPieces(move[0], move[1])
+		myPiecesSort = self.getSortPieces(pieceList, lastMove[0], lastMove[1])
 		pieceStart = time.time()
 		for piece in myPiecesSort:
 			'''for i in range(depth):
 				print("    ", end = '', file = f)
 			print(piece.name, "depth =", depth, "alpha =" , alpha, "beta =", beta, "start: {", file = f)'''
+			if time.time() - pieceStart >= pieceTimePeriod**depth and not piece.near(lastMove[0], lastMove[1]):
+				break
 			if not piece.alive:
 				continue
 			moveList = piece.getMoves()
 			logX, logY = piece.x, piece.y
 			moveStart = time.time()
 			pieceAlpha = -INF
+			if piece.pieceType == 4:
+				tmp = 0
 			for move in moveList:
+				if time.time()-moveStart >= moveTimePeriod**depth and not self.board[move[0]][move[1]]:
+					break
 				die = piece.move(move[0], move[1])
 				value = self.ab(depth+1, -beta, -alpha, move)
 				#revert
@@ -210,16 +221,12 @@ class Abpa:
 							print("    ", end = '', file = f)
 						print(depth, "value = ", value, "return INF+1 }", file = f)'''
 						return INF+1
-				if time.time()-moveStart > moveTimePeriod**depth:
-					break
-			if time.time() - pieceStart > pieceTimePeriod**depth:
-				break
 			'''for i in range(depth):
 				print("    ", end = '', file = f)
-			print(piece.name, "depth =", depth, "alpha =", alpha, "beta =", beta, "pieceAlpha = ", pieceAlpha, "}", file = f)'''
-		'''for i in range(depth):
-			print("    ", end = '')
-		print("depth =", depth, "alpha =", alpha)'''
+			print(piece.name, "depth =", depth, "alpha =", alpha, "beta =", beta, "pieceAlpha = ", pieceAlpha, "}", file = f)
+		for i in range(depth):
+			print("    ", end = '', file = f)
+		print("depth =", depth, "alpha =", alpha, file = f)'''
 		return alpha
 
 import sys
@@ -267,3 +274,4 @@ if __name__ == "__main__":
 		if b.iWin:
 			print('(*) Win!')
 			break
+
