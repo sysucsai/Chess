@@ -6,8 +6,9 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from cchess2 import *
 from threading import Lock, Thread
-
+import functools
 import abpa_fgn
+import abpa_xqwl
 
 lock2 = Lock()
 
@@ -74,7 +75,7 @@ class Window(QWidget):
         self.redPlayer0Button = QRadioButton('玩家', self)  # 单选窗口
         self.redPlayer1Button = QRadioButton('eleeye', self)  # 单选窗口
         self.redPlayer2Button = QRadioButton('丰光南', self)  # 单选窗口
-        self.redPlayer3Button = QRadioButton('空', self)  # 单选窗口
+        self.redPlayer3Button = QRadioButton('弱鸡组合', self)  # 单选窗口
         self.redPlayer4Button = QRadioButton('空', self)  # 单选窗口
         self.redPlayer5Button = QRadioButton('空', self)  # 单选窗口
         self.redPlayer6Button = QRadioButton('空', self)  # 单选窗口
@@ -100,7 +101,7 @@ class Window(QWidget):
         self.blackPlayer0Button = QRadioButton('玩家', self)  # 单选窗口
         self.blackPlayer1Button = QRadioButton('eleeye', self)  # 单选窗口
         self.blackPlayer2Button = QRadioButton('丰光南', self)  # 单选窗口
-        self.blackPlayer3Button = QRadioButton('空', self)  # 单选窗口
+        self.blackPlayer3Button = QRadioButton('弱鸡组合', self)  # 单选窗口
         self.blackPlayer4Button = QRadioButton('空', self)  # 单选窗口
         self.blackPlayer5Button = QRadioButton('空', self)  # 单选窗口
         self.blackPlayer6Button = QRadioButton('空', self)  # 单选窗口
@@ -280,6 +281,8 @@ class Window(QWidget):
             self.playerRed.load("cchess2/test/eleeye/eleeye.exe")
         elif self.playerRedIndex == 2:
             self.playerRed = abpa_fgn.Abpa(True)
+        elif self.playerRedIndex == 3:
+            self.playerRed = abpa_xqwl.Abpa(True)
         else:
             self.playerRed = None
 
@@ -290,6 +293,8 @@ class Window(QWidget):
             self.playerBlack.load("cchess2/test/eleeye/eleeye.exe")
         elif self.playerBlackIndex == 2:
             self.playerBlack = abpa_fgn.Abpa(False)
+        elif self.playerBlackIndex == 3:
+            self.playerBlack = abpa_xqwl.Abpa(False)
         else:
             self.playerBlack = None
 
