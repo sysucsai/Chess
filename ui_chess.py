@@ -6,7 +6,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from cchess2 import *
 from threading import Lock, Thread
-
+import functools
 import abpa_fgn
 import abpa_xqwl
 

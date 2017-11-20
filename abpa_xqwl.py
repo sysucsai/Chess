@@ -433,6 +433,8 @@ class Position:
     def DelPiece(self,sq, pc):
         temp = Board()
         self.ucpcSquares[sq] = 0
+        print(pc)
+        print(sq)
         if pc < 16:
             self.vlWhite -= cucvlPiecePos[pc - 8][sq]
         else :
@@ -465,8 +467,9 @@ class Position:
         if pcCaptured != 0:
             self.DelPiece(sqDst, pcCaptured)
         pc = self.ucpcSquares[sqSrc]
-        self.DelPiece(sqSrc, pc)
-        self.AddPiece(sqDst, pc)
+        if pc != 0:
+            self.DelPiece(sqSrc, pc)
+            self.AddPiece(sqDst, pc)
         return pcCaptured
 
     #撤销搬一步棋的棋子
@@ -652,8 +655,8 @@ class Position:
     def Checked(self):
         temp = Board()
         sqSrc = 0
-        pcSelfSide = self.side_tag(self.sdPlayer)
-        pcOppSide = self.opp_side_tag(self.sdPlayer)
+        pcSelfSide = temp.side_tag(self.sdPlayer)
+        pcOppSide = temp.opp_side_tag(self.sdPlayer)
 
         for sqSrc in range(256):
             #找到将
@@ -715,9 +718,11 @@ class Position:
 
 class Abpa:
     def __init__(self, down = True):
-        self.pos = wlModule.Position()
         self.mvResult = 0
         self.nHistoryTable = []
+        self.pos = Position()
+        self.iWin = False
+        self.down = down
 
     def CompareHistory(self,lpmv1, lpmv2):
         return (self.nHistoryTable[lpmv1] - self.nHistoryTable[lpmv2])
@@ -787,9 +792,4 @@ class Abpa:
         mv = temp.move(sqSrc,sqDst)
         self.pos.MakeMove(mv)
         
-    def __init__(self, down = True):
-        self.pos = Position()
-        self.mvResult = 0
-        self.nHistoryTable = []
-        self.iWin = False
-        self.down = down
+        
