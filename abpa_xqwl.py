@@ -183,7 +183,7 @@ class Board:
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
-            )
+            ),
             #advisor
             (
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -202,7 +202,7 @@ class Board:
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
-            )
+            ),
             #bishop
             (
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -221,7 +221,7 @@ class Board:
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
-            )
+            ),
             #knight
             (
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -240,7 +240,7 @@ class Board:
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
-            )
+            ),
             #rook
             (
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -259,7 +259,7 @@ class Board:
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
-            )
+            ),
             #cannon
             (
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -278,7 +278,7 @@ class Board:
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0
-            )
+            ),
             #pawn
             (
                 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
@@ -426,7 +426,7 @@ class Position:
             self.vlWhite += Board.cucvlPiecePos[pc - 8][sq]
         else :
             self.vlBlack += Board.cucvlPiecePos[pc - 16][Board.square_flip(sq)]
-    
+
     #删除棋子
     def DelPiece(sq, pc):
         self.ucpcSquares[sq] = 0
@@ -709,7 +709,7 @@ class Abpa:
     def __init__(self, down = True):
         self.pos = wlModule.Position()
         self.mvResult = 0
-        self.nHistoryTable = []            
+        self.nHistoryTable = []
 
     def CompareHistory(lpmv1, lpmv2):
         return (self.nHistoryTable[lpmv1] - self.nHistoryTable[lpmv2])
@@ -728,7 +728,7 @@ class Abpa:
         nGenMoves = self.pos.GenerateMoves(mvs)
         sorted(mvs, cmp=lambda x,y:self.CompareHistory(x, y))
 
-        for i in nGenMoves: 
+        for i in nGenMoves:
             pcCaptured = self.pos.MovePiece(mvs[i])
             if pos.MakeMove(mvs[i], pcCaptured):
                 vl = -self.SearchFull(-vlBeta, -vlAlpha, nDepth-1)
@@ -761,8 +761,19 @@ class Abpa:
             if vl > Board.win_value or vl < Board.win_value:
                 break
             #if timer - t > 1 sec break
+    def myStep():
+        self.SearchMain()
+        self.Src = Board.src(self.mvResult)
+        self.Dst = Board.src(self.mvResult)
+        if(self.pos.IsMate()):
+            self.iWin = True
+        return (self.Src, fromY, toX, toY)
 
-
-
-
-
+    def opponentMove(fromX, fromY, toX, toY):
+        pass
+    def __init__(self, down = True):
+        self.pos = wlModule.Position()
+        self.mvResult = 0
+        self.nHistoryTable = []
+        self.iWin = False
+        self.down = down
