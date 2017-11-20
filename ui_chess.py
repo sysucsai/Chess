@@ -177,6 +177,17 @@ class Window(QWidget):
         self.text.move(buttonx, 560)
 
 
+        self.markOld = piece(None,None,None,None,self)
+        self.markNew = piece(None,None,None,None,self)
+        self.markOld.setStyleSheet("background-image:url(\"img/mark.png\");border:0")
+        self.markNew.setStyleSheet("background-image:url(\"img/mark.png\");border:0")
+        self.markOld.setVisible(False)
+        self.markNew.setVisible(False)
+        self.markOld.setEnabled(False)
+        self.markNew.setEnabled(False)
+        self.markOld.resize(70,70)
+        self.markNew.resize(70,70)
+
         self.pieces = []
         for i in range(10):
             self.pieceRow = []
@@ -209,6 +220,7 @@ class Window(QWidget):
         self.stopping = 0
         self.finish = 0
         self.stepQueue = Queue()
+        self.markQueue = Queue()
         self.lastMove = []
         self.choosedPiece = []
         self.playerRedIndex = self.group1.checkedId()
@@ -251,6 +263,13 @@ class Window(QWidget):
                 else:
                     self.pieces[i][j].side = None
                     self.pieces[i][j].setStyleSheet("background-image:none;border:0")
+
+
+        self.markOld.setVisible(False)
+        self.markNew.setVisible(False)
+
+        self.markOld.move(0,0)
+        self.markNew.move(0,0)
 
         self.text.append("·红方执棋...")
 
@@ -318,6 +337,7 @@ class Window(QWidget):
             self.stepQueue.put("*将死，" + {0:"红方",1:"黑方"}[self.side] + "胜")
         else:
             self.stepQueue.put({1: '· 红方执棋...', 0: '· 黑方执棋...'}[self.side])
+        self.markQueue.put(move)
         lock2.release()
         self.pieces[9-yto][xto].id = self.pieces[9-yfrom][xfrom].id
         self.pieces[9-yto][xto].side = self.pieces[9-yfrom][xfrom].side
@@ -328,7 +348,6 @@ class Window(QWidget):
             self.pieces[9-yto][xto].setStyleSheet("background-image:url(\"img/"+self.pieces[9-yto][xto].id + str(self.pieces[9-yto][xto].side) +".png\");border:0")
         else:
             self.pieces[9-yto][xto].setStyleSheet("background-image:url(\"img/"+self.pieces[9-yto][xto].id + str(self.pieces[9-yto][xto].side) +".png\");border:0")
-
         self.side = {0: 1, 1: 0}[self.side]
         return 1
 
@@ -336,6 +355,15 @@ class Window(QWidget):
         lock2.acquire()
         if not self.stepQueue.empty():
             self.text.append(self.stepQueue.get())
+        if not self.markQueue.empty():
+            move = self.markQueue.get()
+            x_s, y_s = self._pos_to_screen(move.p_from.x,move.p_from.y)
+            self.markOld.move(x_s,y_s)
+            x_s, y_s = self._pos_to_screen(move.p_to.x,move.p_to.y)
+            self.markNew.move(x_s, y_s)
+            if not self.markOld.isVisible():
+                self.markOld.setVisible(True)
+                self.markNew.setVisible(True)
         lock2.release()
 
     def aiMove(self,side):
