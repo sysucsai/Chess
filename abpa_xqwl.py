@@ -433,8 +433,6 @@ class Position:
     def DelPiece(self,sq, pc):
         temp = Board()
         self.ucpcSquares[sq] = 0
-        print(pc)
-        print(sq)
         if pc < 16:
             self.vlWhite -= cucvlPiecePos[pc - 8][sq]
         else :
@@ -474,11 +472,13 @@ class Position:
 
     #撤销搬一步棋的棋子
     def UndoMovePiece(self,mv, pcCaptured):
-        sqSrc = self.src(mv)
-        sqDst = self.dst(mv)
-        pc = self.ucpcSquares[self.sqDst]
-        self.DelPiece(sqDst, pc)
-        self.AddPiece(sqSrc, pc)
+        temp = Board()
+        sqSrc = temp.src(mv)
+        sqDst = temp.dst(mv)
+        pc = self.ucpcSquares[sqDst]
+        if pc!=0:
+            self.DelPiece(sqDst, pc)
+            self.AddPiece(sqSrc, pc)
         if pcCaptured != 0:
             self.AddPiece(sqDst, pcCaptured)
 
@@ -488,7 +488,7 @@ class Position:
         if self.Checked():
             self.UndoMovePiece(mv, pcCaptured)
             return False
-        ChangeSide()
+        self.ChangeSide()
         self.nDistance += 1
         return True
 
@@ -704,10 +704,10 @@ class Position:
     def IsMate(self):
         temp = Board()
         mvs = []
-        for ct in temp.max_gen_moves:
+        for ct in range(temp.max_gen_moves):
             mvs.append(0)
         nGenMoves = self.GenerateMoves(mvs)
-        for i in nGenMoves:
+        for i in range(nGenMoves):
             pcCaptured = self.MovePiece(mvs[i])
             if self.Checked() != True:
                 self.UndoMovePiece(mvs[i], pcCaptured)
@@ -734,7 +734,7 @@ class Abpa:
             mvs.append(0)
 
         if nDepth == 0:
-            return self.pos.Evalute()
+            return self.pos.Evaluate()
 
         vlBest = -temp.mate_value
         mvBest = 0
