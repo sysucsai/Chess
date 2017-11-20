@@ -389,7 +389,8 @@ class Window(QWidget):
                     yfrom, xfrom, yto, xto = self.playerRed.myStep()
                     if self.playerRed.iWin:
                         self.finish = 1
-                        print("AI Red feel it Win")
+                        print("AI Red felt it won.")
+                        self._move(xfrom, yfrom, xto, yto )
                     else:
                         self._move(xfrom, yfrom, xto, yto )
             elif side == 1 and self.playerBlackIndex > 0:
@@ -408,7 +409,8 @@ class Window(QWidget):
                     yfrom, xfrom, yto, xto = self.playerBlack.myStep()
                     if self.playerBlack.iWin:
                         self.finish = 1
-                        print("AI Black feel it Win")
+                        print("AI Black felt it won.")
+                        self._move(xfrom, yfrom, xto, yto )
                     else:
                         self._move(xfrom, yfrom, xto, yto )
 

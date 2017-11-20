@@ -651,7 +651,7 @@ class Position:
         else :
             return False
 
-    #判断是否被将军
+    #判断是否被将军，True为被将军
     def Checked(self):
         temp = Board()
         sqSrc = 0
@@ -781,6 +781,7 @@ class Abpa:
         self.SearchMain()
         Src = temp.src(self.mvResult)
         Dst = temp.src(self.mvResult)
+        #我强烈感觉问题出在这里：IsMate()指的是是否【被】将军，而iWin为True表达的是自己胜利，这里的逻辑是冲突的。
         if(self.pos.IsMate()):
             self.iWin = True
         return (12-Src//16, Src%16-3, 12-Dst//16, Dst%16-3)
@@ -791,5 +792,3 @@ class Abpa:
         sqDst = 195-16*toX+toY
         mv = temp.move(sqSrc,sqDst)
         self.pos.MakeMove(mv)
-        
-        
